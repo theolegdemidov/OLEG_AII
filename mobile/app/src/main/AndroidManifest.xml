@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- Без <queries> на Android 11+ приложение не видит чужие пакеты и не может их открыть. -->
+    <queries>
+        <package android:name="com.google.android.youtube" />
+        <package android:name="com.zhiliaoapp.musically" />
+        <package android:name="com.instagram.android" />
+        <package android:name="com.pinterest" />
+        <package android:name="org.telegram.messenger" />
+    </queries>
+
+    <!-- usesCleartextTraffic: сервер на ноутбуке в домашней сети работает по http. Доступ защищён API_TOKEN. -->
+    <application
+        android:allowBackup="false"
+        android:label="OLEG AI"
+        android:usesCleartextTraffic="true"
+        android:theme="@android:style/Theme.Material.NoActionBar">
+        <receiver
+            android:name=".ReminderReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+        <activity
+            android:name=".MainActivity"
+            android:launchMode="singleTop"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

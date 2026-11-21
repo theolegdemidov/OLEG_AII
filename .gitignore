@@ -1,0 +1,12 @@
+.env
+*.db
+__pycache__/
+.pytest_cache/
+.venv/
+findings.json
+*.log
+mobile/.gradle/
+mobile/build/
+mobile/app/build/
+mobile/local.properties
+.idea/
