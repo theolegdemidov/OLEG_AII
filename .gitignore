@@ -5,6 +5,9 @@ __pycache__/
 .venv/
 findings.json
 *.log
+used_titles.txt
+pack.csv
+pack.md
 mobile/.gradle/
 mobile/build/
 mobile/app/build/

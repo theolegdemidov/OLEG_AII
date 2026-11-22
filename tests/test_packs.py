@@ -26,7 +26,7 @@ class TestPacks(unittest.TestCase):
         self.assertEqual(len(n["hooks"]), 3)
         long = packs.normalize({"hooks": ["я" * 300]}, BRAND)
         self.assertEqual(len(long["hooks"][0]), packs.MAX_TITLE)
-        self.assertEqual(packs.normalize(None, BRAND)["hooks"], [])
+        self.assertEqual(packs.normalize("мусор" and None, BRAND)["hooks"], [])
 
     def test_pack_contains_brand_footer_everywhere_needed(self):
         rows = packs.build_pack([{"file": "a.mp4", "topic": "дисциплина"}], BRAND, [], None,
@@ -70,6 +70,30 @@ class TestPacks(unittest.TestCase):
             b = packs.load_brand(p)
             self.assertEqual(b["footer"], "Привет = мир")
             self.assertEqual(b["hashtags"], ["#a", "#b", "#c"])
+
+
+class TestReview(unittest.TestCase):
+    def row(self, f, title, desc="Больше в Telegram: t.me/x", tags=""):
+        return {"file": f, "youtube_title": title, "youtube_description": desc, "instagram_caption": title + tags, "note": ""}
+
+    def test_flags_problems(self):
+        rows = [self.row("a", "Дисциплина важнее мотивации всегда"), self.row("b", "Дисциплина важнее мотивации всегда!"),
+                self.row("c", "Секрет миллионеров: 100% результат"), self.row("d", ""),
+                self.row("e", "Старый хук", desc="без блока"), self.row("f", "Новый", tags=" " + " ".join(f"#t{i}" for i in range(11)))]
+        w = packs.review_pack(rows, BRAND, used={"старый хук"})
+        text = "\n".join(w)
+        self.assertIn("почти повторяет название ролика a", text)
+        self.assertIn("обещание результата", text)
+        self.assertIn("нет названия", text)
+        self.assertIn("уже использовалось", text)
+        self.assertIn("нет постоянного блока", text)
+        self.assertIn("хэштегов больше", text)
+        self.assertNotIn("a:", text)
+        self.assertIn("почти повторяет", rows[1]["note"])
+
+    def test_clean_pack_has_no_warnings(self):
+        rows = [self.row("a", "Страх растёт, пока стоишь"), self.row("b", "Усталость и лень разные вещи")]
+        self.assertEqual(packs.review_pack(rows, BRAND), [])
 
 
 if __name__ == "__main__":

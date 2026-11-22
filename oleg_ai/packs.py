@@ -99,6 +99,43 @@ def build_pack(items, brand, style, cfg, *, start, slots, jitter=15, llm=call_ll
     return rows
 
 
+RISKY = ("100%", "гарантир", "секрет миллионер", "за 7 дней", "быстрые деньги")
+
+
+def _words(text: str) -> set[str]:
+    return set(re.findall(r"\w{3,}", text.lower()))
+
+
+def review_pack(rows: list[dict], brand: dict, used: set[str] | None = None, max_tags: int = 10) -> list[str]:
+    """Проверка перед публикацией: пустые и повторяющиеся названия, обещания результата, лимиты, потерянный блок."""
+    used = {u.lower() for u in (used or set())}
+    warns, seen = [], []
+    for r in rows:
+        w = []
+        title = r["youtube_title"]
+        if not title:
+            w.append("нет названия")
+        else:
+            if title.lower() in used:
+                w.append("такое название уже использовалось раньше")
+            for prev_file, prev in seen:
+                a, b = _words(title), _words(prev)
+                if a and b and len(a & b) / len(a | b) >= 0.8:
+                    w.append(f"почти повторяет название ролика {prev_file}")
+                    break
+            if any(x in title.lower() or x in r["youtube_description"].lower() for x in RISKY):
+                w.append("обещание результата или громкий пустой тезис")
+        if brand["footer"] and brand["footer"] not in r["youtube_description"]:
+            w.append("в описании нет постоянного блока")
+        if len(re.findall(r"#\w+", r["instagram_caption"])) > max_tags:
+            w.append(f"хэштегов больше {max_tags}")
+        seen.append((r["file"], title))
+        if w:
+            warns.append(f"{r['file']}: " + "; ".join(w))
+            r["note"] = "; ".join(filter(None, [r["note"], *w]))
+    return warns
+
+
 def write_pack(rows: list[dict], directory: Path) -> tuple[Path, Path]:
     csv_path, md_path = directory / "pack.csv", directory / "pack.md"
     with open(csv_path, "w", encoding="utf-8-sig", newline="") as f:
@@ -136,7 +173,14 @@ def main(argv=None) -> int:
         sys.exit("Нужны слоты времени (12:00,15:00) и хотя бы одна строка file в CSV")
     rows = build_pack(items, load_brand(ROOT / "brand.txt"), read_lines(ROOT / "style_examples.txt"), get_config(),
                       start=dt.date.fromisoformat(a.start), slots=slots, jitter=a.jitter)
+    used_path = ROOT / "used_titles.txt"
+    used = set(read_lines(used_path))
+    warns = review_pack(rows, load_brand(ROOT / "brand.txt"), used)
     print("Готово:", *write_pack(rows, Path.cwd()))
+    for w in warns:
+        print("Проверь:", w)
+    with open(used_path, "a", encoding="utf-8") as f:  # память: названия не повторяются между пакетами
+        f.writelines(r["youtube_title"] + "\n" for r in rows if r["youtube_title"])
     return 0
 
 
