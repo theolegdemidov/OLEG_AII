@@ -1,8 +1,11 @@
 name: Build Android APK
-# Сборка APK в облаке GitHub: Android Studio на ноутбуке не нужна.
-# Запуск: вкладка Actions -> Build Android APK -> Run workflow. Готовый файл: раздел Artifacts внизу страницы запуска.
+# Запуск: вкладка Actions -> Build Android APK -> Run workflow (кнопка справа).
+# Через 5-10 минут APK появится в разделе Releases (справа на главной странице репозитория): открой его с телефона и скачай.
 on:
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -18,7 +21,16 @@ jobs:
           gradle-version: "8.9"
       - name: Build debug APK
         run: gradle -p mobile assembleDebug --stacktrace
+      - name: Publish APK to Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp mobile/app/build/outputs/apk/debug/app-debug.apk OLEG_AI.apk
+          gh release delete latest-apk --yes --cleanup-tag || true
+          gh release create latest-apk OLEG_AI.apk --target "${{ github.sha }}" \
+            --title "OLEG AI для Android" \
+            --notes "Скачай OLEG_AI.apk на телефон и установи. Если Android спросит про установку из неизвестных источников, разреши для браузера."
       - uses: actions/upload-artifact@v4
         with:
           name: oleg-ai-debug-apk
-          path: mobile/app/build/outputs/apk/debug/app-debug.apk
+          path: OLEG_AI.apk
