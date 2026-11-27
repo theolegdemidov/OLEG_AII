@@ -25,12 +25,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          cp mobile/app/build/outputs/apk/debug/app-debug.apk OLEG_AI.apk
+          cp mobile/app/build/outputs/apk/debug/app-debug.apk SocialD.apk
           gh release delete latest-apk --yes --cleanup-tag || true
-          gh release create latest-apk OLEG_AI.apk --target "${{ github.sha }}" \
-            --title "OLEG AI для Android" \
-            --notes "Скачай OLEG_AI.apk на телефон и установи. Если Android спросит про установку из неизвестных источников, разреши для браузера."
+          gh release create latest-apk SocialD.apk --target "${{ github.sha }}" \
+            --title "SocialD для Android" \
+            --notes "Скачай SocialD.apk на телефон и установи. Если Android спросит про установку из неизвестных источников, разреши для браузера."
       - uses: actions/upload-artifact@v4
         with:
-          name: oleg-ai-debug-apk
-          path: OLEG_AI.apk
+          name: socialD-debug-apk
+          path: SocialD.apk

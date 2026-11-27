@@ -17,7 +17,9 @@
     <!-- usesCleartextTraffic: сервер на ноутбуке в домашней сети работает по http. Доступ защищён API_TOKEN. -->
     <application
         android:allowBackup="false"
-        android:label="OLEG AI"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="@string/app_name"
         android:usesCleartextTraffic="true"
         android:theme="@android:style/Theme.Material.NoActionBar">
         <receiver
